@@ -1,0 +1,166 @@
+---
+title: "Add about MCMC"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+```
+
+
+```{r}
+x<- rnorm(1000,0,1)
+par(mfrow=c(1,2))
+plot(x)
+plot(density(x))
+
+
+f <- function(x){
+  1/(sqrt(2*pi))*exp(-0.5*x^2)
+}
+
+x1 <- runif(1000,-4,4)
+y1 <- f(x1)
+
+par(mfrow=c(2,2))
+plot(density(y1))
+plot(x1,y1, type = "l")
+plot(x1)
+plot(y1)
+```
+
+
+## acceptance-rejection method
+
+```{r}
+
+#Y <- runif(100,0,1)
+Z <- rep(NA,100000)
+
+for (i in 1:100000){
+  X <- runif(1,-4,4)
+  if (runif(1,0,1) <= f(X)) Z[i] <- X
+  else next
+}
+#head(Z)
+par(mfrow=c(1,2))
+plot(Z, type = "l")
+plot(density(Z[complete.cases(Z)]))
+```
+## M-H like acceptance-rejection method
+
+```{r}
+
+#Y <- runif(100,0,1)
+Z <- rep(1,NA,99999)
+
+for (i in 2:100000){
+  X <- runif(1,-4,4)
+  if (runif(1,0,1) <= f(X)) Z[i] <- X
+  else Z[i] <- Z[i-1]
+}
+length(Z)
+par(mfrow=c(1,2))
+plot(Z[-c(1:400)], type = "l")
+plot(density(Z[-c(1:400)]))
+
+```
+```{r}
+
+#Y <- runif(100,0,1)
+Z <- rep(1,NA,9999)
+
+for (i in 2:10000){
+  X <- runif(1,-4,4)
+  if (runif(1,0,1) <= f(X)/f(Z[i-1])) Z[i] <- X
+  else Z[i] <- Z[i-1]
+}
+length(Z)
+
+par(mfrow=c(1,2))
+plot(Z[-c(1:400)], type = "l")
+plot(density(Z[-c(1:400)]))
+
+```
+
+## Probit function
+
+```{r}
+library(bayess)
+data(bank)
+bank=as.matrix(bank)
+y=bank[,5]
+X=bank[,1:4]
+
+probitll <- function(beta, y, x){
+
+  if (is.matrix(beta)==F) beta=as.matrix(t(beta))
+  n=dim(beta)[1]
+  pll=rep(0,n)
+  for (i in 1:n)
+    {
+      lF1=pnorm(X%*%beta[i,],log.p=T)
+      lF2=pnorm(-X%*%beta[i,],log.p=T)
+      pll[i]=sum(y*lF1+(1-y)*lF2)
+    }
+pll
+}
+
+hmflatprobit.y=function(niter,y,X,scale)
+{
+p=dim(X)[2]
+#mod=summary(glm(y~-1+X,family=binomial(link="probit")))
+beta=matrix(0,niter,p)
+#beta[1,]=as.vector(mod$coeff[,1])
+#Sigma2=as.matrix(mod$cov.unscaled)
+beta[1,]=as.vector(c(0,1,1,1))
+Sigma2=as.matrix(cov(X))
+for (i in 2:niter)
+{
+tildebeta=rmnorm(1,beta[i-1,],scale*Sigma2)
+llr=probitll(tildebeta,y,X)-probitll(beta[i-1,],y,X)
+if (runif(1)<=exp(llr)) beta[i,]=tildebeta else beta[i,]=beta[i-1,]
+}
+beta
+}
+
+flatprobit.y=hmflatprobit.y(1000000,y,X,1)
+
+mean(flatprobit.y[20001:1000000,1])
+mean(flatprobit.y[20001:1000000,2])
+mean(flatprobit.y[20001:1000000,3])
+mean(flatprobit.y[20001:1000000,4])
+```
+
+##
+
+```{r}
+f1 <- rnorm(1000)
+f2 <- 2*rnorm(1000)
+par(mfrow=c(1,2))
+plot(density(f1))
+plot(density(f2))
+
+var(f1)
+var(2*f1)
+var(f2)
+
+quantile(f1, 0.025)
+quantile(2*f1, 0.025)
+quantile(f2,0.025)
+```
+
+```{r}
+f1 <- rnorm(1000,1,1)
+f2 <- 2*rnorm(1000,1,1)
+par(mfrow=c(1,2))
+plot(density(f1))
+plot(density(f2))
+
+mean(f1)
+mean(f2)
+var(f1)
+var(f2)
+```
+

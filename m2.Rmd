@@ -1,0 +1,119 @@
+---
+title: "Chapter 2"
+subtitle: "MCMC with R "
+date: "`r Sys.time()`"
+#output: github_document
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(mcsm)
+```
+
+```{r}
+#Section 2.1.1 Uniform generation
+
+nsim=10^4       #number of random numbers
+x=runif(nsim)
+x1=x[-nsim]     #vectors to plot
+x2=x[-1]	#adjacent pairs
+par(mfrow=c(1,3),mar=c(4,4,1,1))
+hist(x,fre=FALSE,xlab="",ylab="",main="")
+plot(x1,x2,xlab=expression(x[t]),ylab=expression(x[t+1]))
+acf(x,ylab="")
+
+
+
+#dev.off()
+set.seed(1)
+print(runif(5))
+set.seed(1)
+print(runif(5))
+```
+
+
+```{r}
+#Section 2.1.2 Inverse transform
+
+nsim=10^4                #number of random variables
+U=runif(nsim) 
+X=-log(U)                #transforms of uniforms
+Y=rexp(nsim)             #exponentials from R
+#X11(h=3.5)
+par(mfrow=c(1,2),mar=c(2,2,2,2))        #plots
+hist(X,freq=F,main="Exp from Uniform",ylab="",xlab="",ncl=150,col="grey",xlim=c(0,8))
+curve(dexp(x),add=T,col="sienna",lwd=2)
+hist(Y,freq=F,main="Exp from R",ylab="",xlab="",ncl=150,col="grey",xlim=c(0,8))
+curve(dexp(x),add=T,col="sienna",lwd=2)
+
+
+
+#dev.off()
+```
+
+
+```{r}
+#Section 2.2 General transforms
+
+print(system.time(test1()));print(system.time(test2()))
+```
+
+
+```{r}
+#Section 2.2.2 Discrete distributions
+
+print(system.time(test3()));print(system.time(test4()))
+```
+
+
+```{r}
+#Section 2.2.3 Mixture representation
+
+Nsim=10^4;n=6;p=.3
+y=rgamma(nsim,n,rate=p/(1-p))
+x=rpois(nsim,y)
+hist(x,main="",freq=F,col="grey",breaks=40,xlab="",ylab="")
+lines(1:50,dnbinom(1:50,n,p),lwd=2,col="sienna")
+```
+
+
+```{r}
+#Section 2.3 Mixture representation
+
+print(optimize(f=function(x){dbeta(x,2.7,6.3)},interval=c(0,1),maximum=TRUE)$objective)
+print(optimize(f=function(x){dbeta(x,2.7,6.3)/dbeta(x,2,6)},maximum=TRUE,interval=c(0,1))$objective)
+
+betagen=function(Nsim=10^3){
+# Generation from a Beta(a,b) target
+# using a uniform and a Beta([a],[b]) proposals
+a=2.7;b=6.3
+
+M=2.67
+y=runif(Nsim)
+u=runif(Nsim,max=M)
+par(mfrow=c(1,2),mar=c(4,4,2,1))
+plot(y,u,col="grey",pch=19,cex=.4,ylab=expression(u.g(y)))
+points(y[u<dbeta(y,a,b)],u[u<dbeta(y,a,b)],pch=19,cex=.4)
+curve(dbeta(x,a,b),col="sienna",lwd=2,add=T)
+abline(h=M,col="gold4",lwd=2)
+
+M=1.68
+y=rbeta(Nsim,2,6)
+u=runif(Nsim,max=M)
+labels=u<dbeta(y,a,b)/dbeta(y,2,6)
+plot(y,u*dbeta(y,2,6),col="grey",pch=19,cex=.4,ylab=expression(u.g(y)))
+points(y[labels],u[labels]*dbeta(y[labels],2,6),pch=19,cex=.4)
+curve(dbeta(x,a,b),col="sienna",lwd=2,add=T)
+curve(M*dbeta(x,2,6),col="gold4",lwd=2,add=T)
+}
+
+betagen(Nsim=2500) #function provided in mcsm
+
+
+#dev.off()
+```
+
+
