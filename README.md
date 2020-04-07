@@ -31,5 +31,10 @@
 
 # Bayesian Computing with R
 
+- [Chapter 1 An introduction to R](b1.nb.html)
 
+- [Chapter 2 INtroduction to Bayesian thinking](b2.nb.html)
 
+- [Chapter 6 MCMC methods](b6.nb.html)
+
+- [Chapter 9 Regression models](b9.nb.html)

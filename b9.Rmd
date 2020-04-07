@@ -1,0 +1,202 @@
+---
+title: "Chapter 9"
+subtitle: "Bayesian Computing with R"
+date: "`r Sys.time()`"
+#output: github_document
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(LearnBayes)
+```
+
+```{r}
+################################
+# Section 9.2.6 An Example
+################################
+
+library(LearnBayes)
+
+ data(birdextinct)
+ attach(birdextinct)
+ logtime=log(time)
+ plot(nesting,logtime)
+ out = (logtime > 3)
+ text(nesting[out], logtime[out], label=species[out], pos = 2)	
+
+
+
+ 
+ plot(jitter(size),logtime,xaxp=c(0,1,1))
+
+
+
+ 
+ plot(jitter(status),logtime,xaxp=c(0,1,1))
+
+##### Least-squares fit
+
+ fit=lm(logtime~nesting+size+status,data=birdextinct,x=TRUE,y=TRUE)
+ summary(fit)
+
+##### Sampling from posterior
+
+ theta.sample=blinreg(fit$y,fit$x,5000)
+
+
+
+ 
+ par(mfrow=c(2,2))
+ hist(theta.sample$beta[,2],main="NESTING",
+  xlab=expression(beta[1]))
+ hist(theta.sample$beta[,3],main="SIZE",
+  xlab=expression(beta[2]))
+ hist(theta.sample$beta[,4],main="STATUS",
+  xlab=expression(beta[3]))
+ hist(theta.sample$sigma,main="ERROR SD",
+  xlab=expression(sigma))
+
+ apply(theta.sample$beta,2,quantile,c(.05,.5,.95))
+
+ quantile(theta.sample$sigma,c(.05,.5,.95))
+
+
+
+###### Estimating mean extinction times
+
+ cov1=c(1,4,0,0)
+ cov2=c(1,4,1,0)
+ cov3=c(1,4,0,1)
+ cov4=c(1,4,1,1)
+ X1=rbind(cov1,cov2,cov3,cov4)
+ mean.draws=blinregexpected(X1,theta.sample)
+
+ c.labels=c("A","B","C","D")
+ 
+ par(mfrow=c(2,2))
+ for (j in 1:4)
+   hist(mean.draws[,j],
+      main=paste("Covariate set",c.labels[j]),xlab="log TIME")
+
+
+
+######## Predicting extinction times
+
+ cov1=c(1,4,0,0)
+ cov2=c(1,4,1,0)
+ cov3=c(1,4,0,1)
+ cov4=c(1,4,1,1)
+ X1=rbind(cov1,cov2,cov3,cov4)
+ pred.draws=blinregpred(X1,theta.sample)
+
+ c.labels=c("A","B","C","D")
+ 
+ par(mfrow=c(2,2))
+ for (j in 1:4)
+   hist(pred.draws[,j],
+      main=paste("Covariate set",c.labels[j]),xlab="log TIME")
+
+
+
+######### Model checking via posterior predictive distribution
+
+ pred.draws=blinregpred(fit$x,theta.sample)
+ pred.sum=apply(pred.draws,2,quantile,c(.05,.95))
+ par(mfrow=c(1,1))
+ ind=1:length(logtime)
+ 
+ matplot(rbind(ind,ind),pred.sum,type="l",lty=1,col=1,
+  xlab="INDEX",ylab="log TIME")
+ points(ind,logtime,pch=19)
+ out=(logtime>pred.sum[2,])
+ text(ind[out], logtime[out], label=species[out], pos = 4)
+
+
+
+######### Model checking via bayes residuals
+
+ prob.out=bayesresiduals(fit,theta.sample,2)
+ 
+ par(mfrow=c(1,1))
+ plot(nesting,prob.out)
+ out = (prob.out > 0.35)
+ text(nesting[out], prob.out[out], label=species[out], pos = 4)	
+
+```
+
+```{r}
+##############################################
+# Section 9.3 Modeling Using Zellner's g Prior
+##############################################
+
+library(LearnBayes)
+
+# illustrating the role of the parameter c
+
+data(puffin)
+X=cbind(1, puffin$Distance - mean(puffin$Distance))
+c.prior=c(0.1,0.5,5,2)
+fit=vector("list",4)
+for (j in 1:4)
+{
+  prior=list(b0=c(8,0), c0=c.prior[j])
+  fit[[j]]=blinreg(puffin$Nest, X, 1000, prior)
+}
+BETA=NULL
+for (j in 1:4)
+  {
+  s=data.frame(Prior=paste("c =",as.character(c.prior[j])),
+         beta0=fit[[j]]$beta[,1],beta1=fit[[j]]$beta[,2])
+  BETA=rbind(BETA,s)
+  }
+library(lattice)
+with(BETA,xyplot(beta1~beta0|Prior,type=c("p","g"),col="black"))
+
+
+
+# model selection
+
+data=list(y=puffin$Nest, X=cbind(1,puffin$Grass,puffin$Soil))
+prior=list(b0=c(0,0,0), c0=100)
+beta.start=with(puffin,lm(Nest~Grass+Soil)$coef)
+laplace(reg.gprior.post,c(beta.start,0),list(data=data,prior=prior))$int
+
+X=puffin[,-1]; y=puffin$Nest; c=100
+bayes.model.selection(y,X,c,constant=FALSE)
+```
+
+```{r}
+##############################################
+# Section 9.4 Survival Modeling
+##############################################
+
+ library(LearnBayes)
+
+ data(chemotherapy)
+ attach(chemotherapy)
+ library(survival)
+ survreg(Surv(time,status)~factor(treat)+age,dist="weibull")
+
+ start=c(-.5,9,.5,-.05)
+ d=cbind(time,status,treat-1,age)
+ fit=laplace(weibullregpost,start,d)
+ fit
+
+ proposal=list(var=fit$var,scale=1.5)
+ bayesfit=rwmetrop(weibullregpost,proposal,fit$mode,10000,d)
+ bayesfit$accept
+
+ par(mfrow=c(2,2))
+ sigma=exp(bayesfit$par[,1])
+ mu=bayesfit$par[,2]
+ beta1=bayesfit$par[,3]
+ beta2=bayesfit$par[,4]
+ hist(beta1,xlab="treatment",main="")
+ hist(beta2,xlab="age",main="")
+ hist(sigma,xlab="sigma",main="")
+```
+
+
