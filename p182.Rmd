@@ -1,0 +1,19 @@
+---
+title: "p182 6.4"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+$$\pi (\mathbf{z, x} \mid \mathbf{\theta, p} )=l(\mathbf{\theta , p} \mid \mathbf{x, z} )$$
+
+$$\pi (\mathbf{x} \mid \mathbf{\theta, p} )=l(\mathbf{\theta , p} \mid \mathbf{x} )$$
+
+
+$$ \pi (\mathbf{z} \mid \mathbf{x,\theta, p} )= \frac{\pi (\mathbf{z, x} \mid \mathbf{\theta, p} )}{\pi({\mathbf{x\mid \mathbf{\theta, p}}})}=\frac{l(\mathbf{\theta, p}\mid  \mathbf{z, x}  )}{l({\mathbf{\theta,p|x}})}$$
+
+
+
+$$\pi (\mathbf{z} \mid \mathbf{x,\theta, p} )= \frac{\prod_{i=1}^{n} p_{z_i}f(x_i|\theta_{z_i})}{\prod_{i=1}^{n}\sum_{j=1}^{k}p_jf(x_i|\theta_j)}$$
+
+where $p_j, \theta_j, x_i$ are observed.

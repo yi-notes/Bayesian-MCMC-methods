@@ -1,0 +1,36 @@
+---
+title: 'P159: Threshold'
+output:
+  pdf_document: default
+  html_notebook: default
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+$$g(k)=\binom{n_1-c_2}{k}\left \{ \frac{q}{(1-q)^2(1-p)^2} \right \}^k \binom{n_1-k}{r_2+c_3}$$
+
+$$f(k)=\text{Binom}(\bar{r},q_2)= \binom{\bar{r}}{k}{q_2}^k{(1-q_2)^{\bar{r}-k}}$$
+
+$$q_2=\frac{q}{q+(1-q)^2(1-p)^2}$$
+$$1-q_2=\frac{(1-q)^2(1-p)^2}{q+(1-q)^2(1-p)^2}$$
+
+Then,$$f(k)=\binom{\bar{r}}{k}\left \{\frac{q}{q+(1-q)^2(1-p)^2}\right \}^k \left \{ \frac{(1-q)^2(1-p)^2}{q+(1-q)^2(1-p)^2} \right \}^{\bar{r}-k}$$
+
+
+
+$$\frac{g(k)}{f(k)}= \frac {\binom{n_1-c_2}{k} \binom{n_1-k}{r_2+c_3}}{\binom{\bar{r}}{k}} \left \{ \frac{q}{(1-q)^2(1-p)^2} \right \}^k \left \{ \frac{q+(1-q)^2(1-p)^2}{q} \right \}^k \left \{ \frac{q+(1-q)^2(1-p)^2}{(1-q)^2(1-p)^2} \right \}^{\bar{r}-k}$$
+
+
+
+$$\frac{g(k)}{f(k)}= \frac {\binom{n_1-c_2}{k} \binom{n_1-k}{r_2+c_3}}{\binom{\bar{r}}{k}} \left \{\frac{ q+(1-q)^2(1-p)^2}{(1-q)^2(1-p)^2} \right \}^{\bar{r}}$$
+
+
+$$q_1=\frac{q}{(1-q)^2(1-p)^2}$$
+
+Then, $$\frac{g(k)}{f(k)}= \frac {\binom{n_1-c_2}{k} \binom{n_1-k}{r_2+c_3}}{\binom{\bar{r}}{k}} \{ {q_1+1} \}^{\bar{r}}$$
+
+
+$$\bar{r}=\text{min}(n_1-r_2-c_3, n_1-c_2)$$
+
+
